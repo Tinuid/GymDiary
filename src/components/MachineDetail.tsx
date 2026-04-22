@@ -18,38 +18,42 @@ export default function MachineDetail() {
   const [todaySession, setTodaySession] = useState<Session | null>(null);
   const [todaySets, setTodaySets] = useState<SetEntry[]>([]);
   const [previousSession, setPreviousSession] = useState<{ session: Session; sets: SetEntry[] } | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const photoUrl = useBlobUrl(machine?.photoBlob);
 
   const load = useCallback(async () => {
     if (!id) return;
     const m = await getMachine(id);
     if (!m) return;
-    setMachine(m);
 
     const today = await getOrCreateTodaysSession(id);
-    setTodaySession(today);
-    setTodaySets(await listSetsBySession(today.id));
+    const todaysSetsList = await listSetsBySession(today.id);
 
     const all = await listSessionsByMachine(id);
     const prior = all.find((s) => s.id !== today.id) ?? null;
-    if (prior) {
-      const sets = await listSetsBySession(prior.id);
-      setPreviousSession({ session: prior, sets });
-    } else {
-      setPreviousSession(null);
-    }
+    const priorWithSets = prior
+      ? { session: prior, sets: await listSetsBySession(prior.id) }
+      : null;
+
+    setMachine(m);
+    setTodaySession(today);
+    setTodaySets(todaysSetsList);
+    setPreviousSession(priorWithSets);
+    setLoaded(true);
   }, [id]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  if (!machine || !todaySession) {
+  if (!loaded || !machine || !todaySession) {
     return <div className="empty">Lade …</div>;
   }
 
-  const initialWeight = todaySets.at(-1)?.weightKg ?? previousSession?.sets.at(-1)?.weightKg ?? 20;
-  const initialReps = todaySets.at(-1)?.reps ?? previousSession?.sets.at(-1)?.reps ?? 10;
+  const lastSet = todaySets.at(-1) ?? previousSession?.sets.at(-1);
+  const initialWeight = lastSet?.weightKg ?? 20;
+  const initialReps = lastSet?.reps ?? 10;
+  const setInputKey = lastSet?.id ?? 'empty';
 
   async function handleSave(weightKg: number, reps: number) {
     if (!machine || !todaySession) return;
@@ -126,7 +130,12 @@ export default function MachineDetail() {
         </ul>
       </div>
 
-      <SetInput initialWeightKg={initialWeight} initialReps={initialReps} onSave={handleSave} />
+      <SetInput
+        key={setInputKey}
+        initialWeightKg={initialWeight}
+        initialReps={initialReps}
+        onSave={handleSave}
+      />
 
       <div className="row" style={{ gap: 8 }}>
         <Link to={`/geraet/${machine.id}/progress`} className="btn btn-block">
