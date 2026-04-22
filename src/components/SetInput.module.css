@@ -1,0 +1,62 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepBtn {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stepBtn:active {
+  background: var(--accent);
+  color: #1a1200;
+}
+
+.value {
+  width: 90px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0;
+  min-height: auto;
+}
+
+.unit {
+  width: 28px;
+  color: var(--text-dim);
+  text-align: left;
+}

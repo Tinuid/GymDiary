@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(command -v magick)",
+      "Bash(command -v convert)",
+      "Bash(command -v node)",
+      "Bash(command -v npm)",
+      "Bash(node *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
