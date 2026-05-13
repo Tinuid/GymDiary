@@ -10,7 +10,11 @@ type Tab = 'Alle' | MuscleGroup;
 export default function Gallery() {
   const machines = useAppStore((s) => s.machines);
   const loaded = useAppStore((s) => s.loaded);
+  const hideUsedToday = useAppStore((s) => s.hideUsedToday);
+  const setHideUsedToday = useAppStore((s) => s.setHideUsedToday);
+  const usedToday = useAppStore((s) => s.machineIdsUsedToday);
   const [tab, setTab] = useState<Tab>('Alle');
+  const [search, setSearch] = useState('');
 
   const tabs: Tab[] = useMemo(() => {
     const present = new Set(machines.map((m) => m.muscleGroup));
@@ -18,9 +22,13 @@ export default function Gallery() {
   }, [machines]);
 
   const filtered = useMemo(() => {
-    const list = tab === 'Alle' ? machines : machines.filter((m) => m.muscleGroup === tab);
+    const q = search.trim().toLowerCase();
+    const list = machines
+      .filter((m) => tab === 'Alle' || m.muscleGroup === tab)
+      .filter((m) => !hideUsedToday || !usedToday.has(m.id))
+      .filter((m) => q === '' || m.name.toLowerCase().includes(q));
     return [...list].sort((a, b) => b.lastUsedAt - a.lastUsedAt);
-  }, [machines, tab]);
+  }, [machines, tab, search, hideUsedToday, usedToday]);
 
   if (loaded && machines.length === 0) {
     return (
@@ -37,6 +45,24 @@ export default function Gallery() {
 
   return (
     <div className="stack">
+      <input
+        type="search"
+        placeholder="Gerät suchen …"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        aria-label="Gerät suchen"
+      />
+
+      <label className={styles.toggleRow}>
+        <input
+          type="checkbox"
+          checked={hideUsedToday}
+          onChange={(e) => setHideUsedToday(e.target.checked)}
+          className={styles.checkbox}
+        />
+        <span>Heute benutzte ausblenden</span>
+      </label>
+
       <div className={styles.tabs} role="tablist">
         {tabs.map((t) => (
           <button
@@ -52,7 +78,7 @@ export default function Gallery() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="empty">Keine Geräte in dieser Gruppe.</div>
+        <div className="empty">Keine Geräte gefunden.</div>
       ) : (
         <div className={styles.grid}>
           {filtered.map((m) => (

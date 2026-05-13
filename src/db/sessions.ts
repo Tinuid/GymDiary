@@ -35,3 +35,19 @@ export async function getSession(id: string): Promise<Session | undefined> {
   const db = await getDb();
   return db.get('sessions', id);
 }
+
+export async function getMachineIdsUsedToday(): Promise<Set<string>> {
+  const db = await getDb();
+  const dayStart = startOfDay(Date.now());
+  const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+  const range = IDBKeyRange.bound(dayStart, dayEnd, false, true);
+  const sessions = await db.getAllFromIndex('sessions', 'by-date', range);
+  const result = new Set<string>();
+  await Promise.all(
+    sessions.map(async (s) => {
+      const firstSetKey = await db.getKeyFromIndex('sets', 'by-sessionId', s.id);
+      if (firstSetKey !== undefined) result.add(s.machineId);
+    }),
+  );
+  return result;
+}

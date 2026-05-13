@@ -6,13 +6,14 @@ import MachineDetail from './components/MachineDetail';
 import MachineForm from './components/MachineForm';
 import ProgressChart from './components/ProgressChart';
 import Settings from './components/Settings';
+import RestTimer from './components/RestTimer';
 
 export default function App() {
-  const refresh = useAppStore((s) => s.refreshMachines);
+  const init = useAppStore((s) => s.init);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    init();
+  }, [init]);
 
   return (
     <div className="app">
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>
+      <RestTimer />
     </div>
   );
 }

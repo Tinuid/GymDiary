@@ -13,6 +13,8 @@ import styles from './MachineDetail.module.css';
 export default function MachineDetail() {
   const { id } = useParams<{ id: string }>();
   const refresh = useAppStore((s) => s.refreshMachines);
+  const refreshUsedToday = useAppStore((s) => s.refreshUsedToday);
+  const startRestTimer = useAppStore((s) => s.startRestTimer);
 
   const [machine, setMachine] = useState<Machine | null>(null);
   const [todaySession, setTodaySession] = useState<Session | null>(null);
@@ -60,11 +62,14 @@ export default function MachineDetail() {
     await addSet({ sessionId: todaySession.id, machineId: machine.id, weightKg, reps });
     await touchMachine(machine.id);
     await refresh();
+    await refreshUsedToday();
     await load();
+    startRestTimer();
   }
 
   async function handleDeleteSet(setId: string) {
     await deleteSet(setId);
+    await refreshUsedToday();
     await load();
   }
 

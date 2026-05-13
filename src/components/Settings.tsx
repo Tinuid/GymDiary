@@ -1,13 +1,30 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { downloadBackup, importBackup, readBackupFile } from '../db/backup';
 import { useAppStore } from '../store/useAppStore';
 
 export default function Settings() {
   const inputRef = useRef<HTMLInputElement>(null);
   const refresh = useAppStore((s) => s.refreshMachines);
+  const refreshUsedToday = useAppStore((s) => s.refreshUsedToday);
   const machineCount = useAppStore((s) => s.machines.length);
+  const restTimerSeconds = useAppStore((s) => s.restTimerSeconds);
+  const setRestTimerSeconds = useAppStore((s) => s.setRestTimerSeconds);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [restInput, setRestInput] = useState<string>(String(restTimerSeconds));
+
+  useEffect(() => {
+    setRestInput(String(restTimerSeconds));
+  }, [restTimerSeconds]);
+
+  function commitRestSeconds() {
+    const parsed = Number(restInput);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setRestTimerSeconds(parsed);
+    } else {
+      setRestInput(String(restTimerSeconds));
+    }
+  }
 
   async function handleExport() {
     setBusy(true);
@@ -32,6 +49,7 @@ export default function Settings() {
         : 'merge';
       const result = await importBackup(payload, mode);
       await refresh();
+      await refreshUsedToday();
       setStatus(
         `Import erfolgreich (${mode === 'replace' ? 'ersetzt' : 'zusammengeführt'}): ${result.machines} Geräte, ${result.sessions} Sessions, ${result.sets} Sätze.`,
       );
@@ -48,6 +66,25 @@ export default function Settings() {
       <div className="card">
         <div style={{ color: 'var(--text-dim)', fontSize: 13 }}>Gespeicherte Geräte</div>
         <div style={{ fontSize: 28, fontWeight: 600 }}>{machineCount}</div>
+      </div>
+
+      <div className="card stack">
+        <div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Pause zwischen Sätzen</div>
+          <div style={{ color: 'var(--text-dim)', fontSize: 13 }}>
+            Sekunden. Timer startet automatisch nach jedem gespeicherten Satz.
+          </div>
+        </div>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={5}
+          max={600}
+          step={5}
+          value={restInput}
+          onChange={(e) => setRestInput(e.target.value)}
+          onBlur={commitRestSeconds}
+        />
       </div>
 
       <div className="card stack">
